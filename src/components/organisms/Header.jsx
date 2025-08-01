@@ -1,9 +1,14 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 import ApperIcon from "@/components/ApperIcon"
 import Button from "@/components/atoms/Button"
+import { AuthContext } from '../../App'
 
 const Header = ({ onMenuClick, occupiedRooms, totalRooms }) => {
   const [currentTime, setCurrentTime] = useState(new Date())
+  const { logout } = useContext(AuthContext)
+  const { user, isAuthenticated } = useSelector((state) => state.user)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -14,6 +19,15 @@ const Header = ({ onMenuClick, occupiedRooms, totalRooms }) => {
   }, [])
 
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast.success('Logged out successfully')
+    } catch (error) {
+      toast.error('Logout failed')
+    }
+  }
 
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm">
@@ -80,6 +94,26 @@ const Header = ({ onMenuClick, occupiedRooms, totalRooms }) => {
               <span className="text-[10px] text-white font-bold">3</span>
             </div>
           </Button>
+
+          {isAuthenticated && (
+            <div className="flex items-center gap-3">
+              <div className="hidden md:block text-right">
+                <p className="text-sm font-medium text-navy-700">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-gray-600">{user?.emailAddress}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <ApperIcon name="LogOut" className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

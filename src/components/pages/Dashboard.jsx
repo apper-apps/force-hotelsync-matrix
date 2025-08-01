@@ -57,7 +57,7 @@ loadData()
     .filter(room => room.status === "occupied" && room.rate)
     .reduce((sum, room) => sum + room.rate, 0)
   
-  const todayCheckouts = rooms.filter(room => 
+const todayCheckouts = rooms.filter(room => 
     room.status === "occupied" && 
     room.checkOut &&
     new Date(room.checkOut).toDateString() === new Date().toDateString()

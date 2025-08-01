@@ -39,9 +39,9 @@ const Rooms = () => {
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(room =>
-        room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        room.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+filtered = filtered.filter(room =>
+        room.number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        room.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (room.guestName && room.guestName.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     }

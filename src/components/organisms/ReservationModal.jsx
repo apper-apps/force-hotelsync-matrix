@@ -179,8 +179,8 @@ const ReservationModal = ({ reservation, rooms, onSave, onDelete, onClose }) => 
               >
                 <option value="">Select a room</option>
                 {rooms.map(room => (
-                  <option key={room.Id} value={room.Id}>
-                    Room {room.number} - {room.type} (${room.price}/night)
+<option key={room.Id} value={room.Id}>
+                    Room {room.number} - {room.type} (${room.rate}/night)
                   </option>
                 ))}
               </select>
@@ -189,9 +189,9 @@ const ReservationModal = ({ reservation, rooms, onSave, onDelete, onClose }) => 
               )}
               {selectedRoom && (
                 <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                  <div className="font-medium">Room {selectedRoom.number}</div>
-                  <div>{selectedRoom.type} • ${selectedRoom.price}/night</div>
-                  <div>Max occupancy: {selectedRoom.capacity}</div>
+<div className="font-medium">Room {selectedRoom.number}</div>
+                  <div>{selectedRoom.type} • ${selectedRoom.rate}/night</div>
+                  <div>Floor: {selectedRoom.floor}</div>
                 </div>
               )}
             </div>
@@ -232,8 +232,8 @@ const ReservationModal = ({ reservation, rooms, onSave, onDelete, onClose }) => 
               <Input
                 id="guests"
                 type="number"
-                min="1"
-                max={selectedRoom ? selectedRoom.capacity : 10}
+min="1"
+                max="10"
                 value={formData.guests}
                 onChange={(e) => handleInputChange('guests', e.target.value)}
                 className={errors.guests ? 'border-red-500' : ''}
@@ -241,9 +241,9 @@ const ReservationModal = ({ reservation, rooms, onSave, onDelete, onClose }) => 
               {errors.guests && (
                 <p className="text-sm text-red-600">{errors.guests}</p>
               )}
-              {selectedRoom && formData.guests > selectedRoom.capacity && (
+{selectedRoom && formData.guests > 10 && (
                 <p className="text-sm text-amber-600">
-                  Warning: Exceeds room capacity ({selectedRoom.capacity})
+                  Warning: Exceeds maximum capacity (10)
                 </p>
               )}
             </div>
@@ -258,9 +258,12 @@ const ReservationModal = ({ reservation, rooms, onSave, onDelete, onClose }) => 
                   </div>
                   <div>
                     {Math.ceil((new Date(formData.checkOut) - new Date(formData.checkIn)) / (1000 * 60 * 60 * 24))} nights
+<div>
+                    {Math.ceil((new Date(formData.checkOut) - new Date(formData.checkIn)) / (1000 * 60 * 60 * 24))} nights
                   </div>
                   <div className="font-medium mt-1">
-                    Total: ${(Math.ceil((new Date(formData.checkOut) - new Date(formData.checkIn)) / (1000 * 60 * 60 * 24)) * selectedRoom.price).toLocaleString()}
+                    Total: ${(Math.ceil((new Date(formData.checkOut) - new Date(formData.checkIn)) / (1000 * 60 * 60 * 24)) * selectedRoom.rate).toLocaleString()}
+                  </div>
                   </div>
                 </div>
               </div>

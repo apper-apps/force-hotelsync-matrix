@@ -1,149 +1,377 @@
-// Mock reservation data
-const mockReservations = [
-  {
-    Id: 1,
-    guestName: "John Smith",
-    roomId: 101,
-    checkIn: "2024-01-15",
-    checkOut: "2024-01-18",
-    guests: 2,
-    status: "confirmed",
-    color: "#3B82F6"
-  },
-  {
-    Id: 2,
-    guestName: "Sarah Johnson",
-    roomId: 102,
-    checkIn: "2024-01-16",
-    checkOut: "2024-01-20",
-    guests: 1,
-    status: "confirmed",
-    color: "#10B981"
-  },
-  {
-    Id: 3,
-    guestName: "Mike Wilson",
-    roomId: 103,
-    checkIn: "2024-01-18",
-    checkOut: "2024-01-22",
-    guests: 3,
-    status: "confirmed",
-    color: "#F59E0B"
-  },
-  {
-    Id: 4,
-    guestName: "Emma Davis",
-    roomId: 201,
-    checkIn: "2024-01-20",
-    checkOut: "2024-01-23",
-    guests: 2,
-    status: "confirmed",
-    color: "#8B5CF6"
-  },
-  {
-    Id: 5,
-    guestName: "Robert Brown",
-    roomId: 202,
-    checkIn: "2024-01-22",
-    checkOut: "2024-01-25",
-    guests: 1,
-    status: "confirmed",
-    color: "#EF4444"
-  }
-];
-
-// Simple delay function for simulating API calls
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // Generate colors for new reservations
-const colors = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#06B6D4", "#84CC16"];
-let colorIndex = 0;
+const colors = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#06B6D4", "#84CC16"]
+let colorIndex = 0
 
 class ReservationService {
   constructor() {
-    this.reservations = [...mockReservations];
-    this.nextId = Math.max(...this.reservations.map(r => r.Id)) + 1;
+    const { ApperClient } = window.ApperSDK
+    this.apperClient = new ApperClient({
+      apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+      apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+    })
+    this.tableName = 'reservation'
   }
 
   async getAll() {
-    await delay(100);
-    return [...this.reservations];
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "guestName" } },
+          { field: { Name: "roomId" } },
+          { field: { Name: "checkIn" } },
+          { field: { Name: "checkOut" } },
+          { field: { Name: "guests" } },
+          { field: { Name: "status" } },
+          { field: { Name: "color" } }
+        ]
+      }
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      return response.data || []
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching reservations:", error?.response?.data?.message)
+      } else {
+        console.error("Error fetching reservations:", error.message)
+      }
+      throw error
+    }
   }
 
   async getById(id) {
-    await delay(50);
-    if (typeof id !== 'number') {
-      throw new Error('Reservation ID must be a number');
+    try {
+      const numericId = typeof id === 'number' ? id : parseInt(id)
+      if (isNaN(numericId)) {
+        throw new Error('Reservation ID must be a number')
+      }
+
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "guestName" } },
+          { field: { Name: "roomId" } },
+          { field: { Name: "checkIn" } },
+          { field: { Name: "checkOut" } },
+          { field: { Name: "guests" } },
+          { field: { Name: "status" } },
+          { field: { Name: "color" } }
+        ]
+      }
+
+      const response = await this.apperClient.getRecordById(this.tableName, numericId, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      return response.data
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error(`Error fetching reservation with ID ${id}:`, error?.response?.data?.message)
+      } else {
+        console.error(`Error fetching reservation with ID ${id}:`, error.message)
+      }
+      throw error
     }
-    const reservation = this.reservations.find(r => r.Id === id);
-    return reservation ? { ...reservation } : null;
   }
 
   async create(reservationData) {
-    await delay(200);
-    const newReservation = {
-      ...reservationData,
-      Id: this.nextId++,
-      color: colors[colorIndex % colors.length],
-      status: 'confirmed'
-    };
-    colorIndex++;
-    this.reservations.push(newReservation);
-    return { ...newReservation };
+    try {
+      // Only include Updateable fields
+      const updateableData = {
+        Name: reservationData.Name,
+        Tags: reservationData.Tags,
+        Owner: reservationData.Owner,
+        guestName: reservationData.guestName,
+        roomId: parseInt(reservationData.roomId),
+        checkIn: reservationData.checkIn,
+        checkOut: reservationData.checkOut,
+        guests: parseInt(reservationData.guests),
+        status: reservationData.status || "confirmed",
+        color: colors[colorIndex % colors.length]
+      }
+
+      colorIndex++
+
+      const params = {
+        records: [updateableData]
+      }
+
+      const response = await this.apperClient.createRecord(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      if (response.results) {
+        const successfulRecords = response.results.filter(result => result.success)
+        const failedRecords = response.results.filter(result => !result.success)
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create reservation ${failedRecords.length} records:${JSON.stringify(failedRecords)}`)
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              console.error(`${error.fieldLabel}: ${error.message}`)
+            })
+          })
+        }
+        
+        return successfulRecords.length > 0 ? successfulRecords[0].data : null
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error creating reservation:", error?.response?.data?.message)
+      } else {
+        console.error("Error creating reservation:", error.message)
+      }
+      throw error
+    }
   }
 
   async update(id, reservationData) {
-    await delay(150);
-    if (typeof id !== 'number') {
-      throw new Error('Reservation ID must be a number');
+    try {
+      const numericId = typeof id === 'number' ? id : parseInt(id)
+      if (isNaN(numericId)) {
+        throw new Error('Reservation ID must be a number')
+      }
+
+      // Only include Updateable fields
+      const updateableData = {
+        Id: numericId,
+        ...(reservationData.Name !== undefined && { Name: reservationData.Name }),
+        ...(reservationData.Tags !== undefined && { Tags: reservationData.Tags }),
+        ...(reservationData.Owner !== undefined && { Owner: reservationData.Owner }),
+        ...(reservationData.guestName !== undefined && { guestName: reservationData.guestName }),
+        ...(reservationData.roomId !== undefined && { roomId: parseInt(reservationData.roomId) }),
+        ...(reservationData.checkIn !== undefined && { checkIn: reservationData.checkIn }),
+        ...(reservationData.checkOut !== undefined && { checkOut: reservationData.checkOut }),
+        ...(reservationData.guests !== undefined && { guests: parseInt(reservationData.guests) }),
+        ...(reservationData.status !== undefined && { status: reservationData.status }),
+        ...(reservationData.color !== undefined && { color: reservationData.color })
+      }
+
+      const params = {
+        records: [updateableData]
+      }
+
+      const response = await this.apperClient.updateRecord(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      if (response.results) {
+        const successfulUpdates = response.results.filter(result => result.success)
+        const failedUpdates = response.results.filter(result => !result.success)
+        
+        if (failedUpdates.length > 0) {
+          console.error(`Failed to update reservation ${failedUpdates.length} records:${JSON.stringify(failedUpdates)}`)
+          failedUpdates.forEach(record => {
+            record.errors?.forEach(error => {
+              console.error(`${error.fieldLabel}: ${error.message}`)
+            })
+          })
+        }
+        
+        return successfulUpdates.length > 0 ? successfulUpdates[0].data : null
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error updating reservation:", error?.response?.data?.message)
+      } else {
+        console.error("Error updating reservation:", error.message)
+      }
+      throw error
     }
-    const index = this.reservations.findIndex(r => r.Id === id);
-    if (index === -1) {
-      throw new Error('Reservation not found');
-    }
-    this.reservations[index] = { ...this.reservations[index], ...reservationData };
-    return { ...this.reservations[index] };
   }
 
   async delete(id) {
-    await delay(100);
-    if (typeof id !== 'number') {
-      throw new Error('Reservation ID must be a number');
+    try {
+      const numericId = typeof id === 'number' ? id : parseInt(id)
+      if (isNaN(numericId)) {
+        throw new Error('Reservation ID must be a number')
+      }
+
+      const params = {
+        RecordIds: [numericId]
+      }
+
+      const response = await this.apperClient.deleteRecord(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      if (response.results) {
+        const successfulDeletions = response.results.filter(result => result.success)
+        const failedDeletions = response.results.filter(result => !result.success)
+        
+        if (failedDeletions.length > 0) {
+          console.error(`Failed to delete reservation ${failedDeletions.length} records:${JSON.stringify(failedDeletions)}`)
+        }
+        
+        return successfulDeletions.length > 0
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error deleting reservation:", error?.response?.data?.message)
+      } else {
+        console.error("Error deleting reservation:", error.message)
+      }
+      throw error
     }
-    const index = this.reservations.findIndex(r => r.Id === id);
-    if (index === -1) {
-      throw new Error('Reservation not found');
-    }
-    this.reservations.splice(index, 1);
-    return true;
   }
 
   async getByDateRange(startDate, endDate) {
-    await delay(100);
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    return this.reservations.filter(reservation => {
-      const checkIn = new Date(reservation.checkIn);
-      const checkOut = new Date(reservation.checkOut);
-      return checkIn <= end && checkOut >= start;
-    }).map(r => ({ ...r }));
+    try {
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "guestName" } },
+          { field: { Name: "roomId" } },
+          { field: { Name: "checkIn" } },
+          { field: { Name: "checkOut" } },
+          { field: { Name: "guests" } },
+          { field: { Name: "status" } },
+          { field: { Name: "color" } }
+        ],
+        where: [
+          {
+            FieldName: "checkIn",
+            Operator: "LessThanOrEqualTo",
+            Values: [endDate]
+          },
+          {
+            FieldName: "checkOut", 
+            Operator: "GreaterThanOrEqualTo",
+            Values: [startDate]
+          }
+        ]
+      }
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      return response.data || []
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching reservations by date range:", error?.response?.data?.message)
+      } else {
+        console.error("Error fetching reservations by date range:", error.message)
+      }
+      throw error
+    }
   }
 
   async getTodayArrivals() {
-    await delay(50);
-    const today = new Date().toISOString().split('T')[0];
-    return this.reservations.filter(r => r.checkIn === today).map(r => ({ ...r }));
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "guestName" } },
+          { field: { Name: "roomId" } },
+          { field: { Name: "checkIn" } },
+          { field: { Name: "checkOut" } },
+          { field: { Name: "guests" } },
+          { field: { Name: "status" } },
+          { field: { Name: "color" } }
+        ],
+        where: [
+          {
+            FieldName: "checkIn",
+            Operator: "EqualTo",
+            Values: [today]
+          }
+        ]
+      }
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      return response.data || []
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching today's arrivals:", error?.response?.data?.message)
+      } else {
+        console.error("Error fetching today's arrivals:", error.message)
+      }
+      throw error
+    }
   }
 
   async getTodayDepartures() {
-    await delay(50);
-    const today = new Date().toISOString().split('T')[0];
-    return this.reservations.filter(r => r.checkOut === today).map(r => ({ ...r }));
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "Owner" } },
+          { field: { Name: "guestName" } },
+          { field: { Name: "roomId" } },
+          { field: { Name: "checkIn" } },
+          { field: { Name: "checkOut" } },
+          { field: { Name: "guests" } },
+          { field: { Name: "status" } },
+          { field: { Name: "color" } }
+        ],
+        where: [
+          {
+            FieldName: "checkOut",
+            Operator: "EqualTo",
+            Values: [today]
+          }
+        ]
+      }
+
+      const response = await this.apperClient.fetchRecords(this.tableName, params)
+      
+      if (!response.success) {
+        console.error(response.message)
+        throw new Error(response.message)
+      }
+
+      return response.data || []
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching today's departures:", error?.response?.data?.message)
+      } else {
+        console.error("Error fetching today's departures:", error.message)
+      }
+      throw error
+    }
   }
 }
 
-const reservationService = new ReservationService();
-export { reservationService };
+const reservationService = new ReservationService()
+export { reservationService }

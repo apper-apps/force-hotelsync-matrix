@@ -39,10 +39,10 @@ const Guests = () => {
     if (!searchTerm.trim()) {
       setFilteredGuests(guests)
     } else {
-      const filtered = guests.filter(guest =>
-        guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        guest.roomNumber.includes(searchTerm) ||
-        guest.email.toLowerCase().includes(searchTerm.toLowerCase())
+const filtered = guests.filter(guest =>
+        guest.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.roomNumber?.includes(searchTerm) ||
+        guest.email?.toLowerCase().includes(searchTerm.toLowerCase())
       )
       setFilteredGuests(filtered)
     }
@@ -122,8 +122,8 @@ const Guests = () => {
     return guest.checkOutDate === today && guest.status === "checked-in"
   })
 
-  const vipGuests = guests.filter(guest => guest.vip)
-  const guestsWithRequests = guests.filter(guest => guest.specialRequests?.length > 0)
+const vipGuests = guests.filter(guest => guest.vip === "true")
+  const guestsWithRequests = guests.filter(guest => guest.specialRequests && guest.specialRequests.length > 0)
 
   if (loading) return <Loading />
   if (error) return <Error message={error} onRetry={loadGuests} />
@@ -245,16 +245,16 @@ const Guests = () => {
               <tbody>
                 {filteredGuests.map((guest) => (
                   <tr key={guest.Id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{guest.name}</span>
-                        {guest.vip && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                            <ApperIcon name="Star" className="h-3 w-3 mr-1" />
-                            VIP
-                          </span>
-                        )}
-                      </div>
+<td className="py-3 px-4">
+                       <div className="flex items-center gap-2">
+                         <span className="font-medium">{guest.Name}</span>
+                         {guest.vip === "true" && (
+                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                             <ApperIcon name="Star" className="h-3 w-3 mr-1" />
+                             VIP
+                           </span>
+                         )}
+                       </div>
                     </td>
                     <td className="py-3 px-4 font-medium text-navy-600">{guest.roomNumber}</td>
                     <td className="py-3 px-4 text-gray-600">{guest.checkInDate}</td>

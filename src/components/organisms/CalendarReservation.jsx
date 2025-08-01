@@ -122,8 +122,8 @@ const CalendarReservation = () => {
   };
 
   const getRoomNumber = (roomId) => {
-    const room = rooms.find(r => r.Id === roomId);
-    return room ? room.number : roomId;
+const room = rooms.find(r => r.Id === roomId)
+    return room ? room.number : roomId
   };
 
   if (loading) {

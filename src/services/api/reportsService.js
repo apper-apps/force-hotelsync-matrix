@@ -51,11 +51,11 @@ class ReportsService {
       const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms * 100) : 0;
       
       // Calculate today's revenue (realistic hotel pricing)
-      const todayRevenue = todayReservations.reduce((total, reservation) => {
-        const room = rooms.find(r => r.id === reservation.roomId);
-        const baseRate = room ? (room.type === 'Suite' ? 350 : room.type === 'Deluxe' ? 250 : 180) : 200;
-        return total + baseRate;
-      }, 0);
+const todayRevenue = todayReservations.reduce((total, reservation) => {
+        const room = rooms.find(r => r.Id === reservation.roomId)
+        const baseRate = room ? (room.type === 'Suite' ? 350 : room.type === 'Deluxe' ? 250 : 180) : 200
+        return total + baseRate
+      }, 0)
       
       // Calculate ADR (Average Daily Rate)
       const adr = occupiedRooms > 0 ? todayRevenue / occupiedRooms : 0;

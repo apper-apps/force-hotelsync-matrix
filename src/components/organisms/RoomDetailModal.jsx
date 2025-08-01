@@ -13,7 +13,7 @@ const RoomDetailModal = ({ room, onClose, onStatusUpdate }) => {
   const handleStatusChange = async (newStatus) => {
     setLoading(true)
     try {
-      const updatedRoom = await roomService.update(room.Id, { ...room, status: newStatus })
+const updatedRoom = await roomService.update(room.Id, { status: newStatus })
       onStatusUpdate(updatedRoom)
       toast.success(`Room ${room.number} status updated to ${newStatus}`)
     } catch (error) {

@@ -18,7 +18,7 @@ const RoomCard = ({ room, onClick }) => {
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="font-display text-lg font-bold text-navy-700">{room.number}</h3>
+<h3 className="font-display text-lg font-bold text-navy-700">{room.number}</h3>
             <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
               {room.type}
             </span>
