@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react"
-import Sidebar from "@/components/organisms/Sidebar"
-import Header from "@/components/organisms/Header"
-import { roomService } from "@/services/api/roomService"
+import React, { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { roomService } from "@/services/api/roomService";
+import Sidebar from "@/components/organisms/Sidebar";
+import Header from "@/components/organisms/Header";
 
-const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+const Layout = () => {
+const [sidebarOpen, setSidebarOpen] = useState(false)
   const [occupancyData, setOccupancyData] = useState({ occupied: 0, total: 0 })
 
   useEffect(() => {
@@ -56,7 +57,7 @@ loadOccupancyData()
         />
         
         <main className="flex-1 overflow-auto p-6">
-          {children}
+<Outlet />
         </main>
       </div>
     </div>
